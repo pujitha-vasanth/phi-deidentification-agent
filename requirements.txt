@@ -1,0 +1,81 @@
+langgraph>=0.2.0
+langgraph-checkpoint-sqlite>=2.0.0
+langchain-core>=0.3.0
+
+# --- PHI-detection-accuracy-critical: pinned EXACTLY, not >=. ---
+# Every F1/precision/recall number in README.md, LECTURER_EVALUATION.md, and
+# the capstone report was produced against this exact version set. An
+# earlier unpinned `presidio-analyzer>=2.2.0` let a routine `pip install`
+# silently pick up a newer Presidio release than whatever produced the
+# originally-reported numbers, and the two don't agree: re-running the eval
+# after that drift dropped OVERLAP F1 from 0.6814 to 0.6587 and introduced
+# 11 real false negatives (all DATE_TIME) that weren't there before --
+# same code, same dataset, different recognizer behavior under the hood.
+# Documented as a reproducibility finding rather than silently patched over
+# (see README's "Evaluation" section) -- but the actual fix for *future*
+# clones is here: pin exactly, so `pip install -r requirements.txt` today
+# reproduces the exact numbers in the report, not whatever Presidio/spaCy
+# happen to ship next month. If you deliberately upgrade one of these,
+# re-run `python -m eval.evaluate --backend presidio` and update every
+# number in README/report/deck to match -- don't let them silently diverge
+# again.
+presidio-analyzer==2.2.364
+presidio-anonymizer==2.2.364
+spacy==3.7.5
+thinc==8.2.5
+blis==0.7.11
+# thinc==8.2.x (a spacy 3.7.x dependency) ships Cython extensions compiled
+# against NumPy 1.x's internal dtype struct layout. NumPy 2.0 changed that
+# layout, so an unpinned numpy resolves to 2.x and thinc's compiled
+# numpy_ops extension crashes at import with "numpy.dtype size changed,
+# may indicate binary incompatibility" -- a hard ABI break, not something
+# catchable/recoverable at runtime. Found live on Streamlit Cloud: this
+# silently took down presidio_analyzer's import for the whole process,
+# which PHIDetectionAgent's `except Exception` around that import quietly
+# absorbed, so every request fell back to the regex-only detector with no
+# visible error until logging was added there specifically to catch it.
+numpy<2.0.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.6.0
+pytest>=8.0.0
+httpx>=0.27.0
+faker>=24.0.0
+pdfplumber>=0.11.0
+python-docx>=1.1.0
+fpdf2>=2.7.0
+streamlit>=1.35.0
+requests>=2.31.0
+openai>=1.30.0  # optional: only needed if PHI_DEID_CLASSIFICATION_BACKEND=llm
+python-dotenv>=1.0.0  # loads .env locally; harmless no-op if no .env file exists
+sqlalchemy>=2.0.0  # storage/audit_store.py -- persistent, queryable audit trail
+langsmith>=0.1.0  # optional: only used if LANGCHAIN_API_KEY is set (see tracing.py)
+slowapi>=0.1.9  # Rate limiting for API endpoints -- prevents DOS attacks and resource exhaustion
+langchain-openai>=0.2.0  # optional: only needed if PHI_DEID_ADJUDICATION_BACKEND=llm (agents/llm_adjudication_agent.py)
+
+# en_core_web_sm as a direct pip-installable wheel: this is what the
+# Streamlit Community Cloud live demo runs (PHI_DEID_SPACY_MODEL=en_core_web_sm),
+# since Streamlit Cloud only executes this requirements.txt and has no build
+# step to run `spacy download`. It's also small enough to fit the platform's
+# 1GB RAM cap alongside two web server processes. Local dev / Docker still
+# default to en_core_web_lg (see below) -- this line is additive, not a
+# replacement.
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+# After installing, download the larger spaCy model Presidio's default NLP
+# engine uses (and that every eval number in the report was produced with):
+#   python -m spacy download en_core_web_lg
+# (en_core_web_sm above also works and is much smaller/faster if en_core_web_lg
+# download is impractical on your machine — accuracy trade-off only.)
+#
+# Optional, for the scispaCy upgrade path referenced in the workflow diagram:
+#   pip install scispacy
+#   pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_core_sci_sm-0.5.4.tar.gz
+#
+# Optional, only needed for extract_pdf_with_ocr() (scanned/image-only PDFs
+# with no embedded text layer — not required for normal digital PDFs):
+#   pip install pytesseract pdf2image
+#   plus the tesseract-ocr and poppler system binaries (not pip-installable):
+#     macOS:   brew install tesseract poppler
+#     Ubuntu:  apt-get install tesseract-ocr poppler-utils
+#     Windows: install both separately and add to PATH
