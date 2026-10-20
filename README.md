@@ -4,7 +4,7 @@ A LangGraph multi-agent system that detects, redacts and audits Protected Health
 
 **Live demo:** [phi-deidentification.streamlit.app](https://phi-deidentification.streamlit.app/) (no sign-up needed)
 
-Capstone project, IITM Pravartak Advanced Certification in Agentic AI (Group 9).
+Team capstone project (six members, see [Team](#team)), IITM Pravartak Advanced Certification in Agentic AI.
 
 ---
 
@@ -85,8 +85,8 @@ You need **Python 3.11** and **Git** installed. Run these in a terminal.
 **1. Get the code**
 
 ```bash
-git clone https://github.com/Ramya192/phi-deidentification.git
-cd phi-deidentification
+git clone https://github.com/pujitha-vasanth/phi-deidentification-agent.git
+cd phi-deidentification-agent
 ```
 
 **2. Create a virtual environment and install packages**
